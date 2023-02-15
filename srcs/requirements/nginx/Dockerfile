@@ -1,9 +1,10 @@
 FROM debian:buster
 RUN apt update
-RUN apt -y install nginx vim curl
-COPY default /etc/nginx/sites-available/
-COPY nginx-selfsigned.crt /etc/nginx/ssl/certs/nginx-selfsigned.crt
-COPY nginx-selfsigned.key /etc/nginx/ssl/private/nginx-selfsigned.key
-RUN echo "daemon off;" >> /etc/nginx/nginx.conf
-RUN  chmod 700 /etc/ssl/private
-CMD service nginx start
+ARG CERTS
+ENV CERTS=${CERTS}
+RUN apt -y install vim curl
+COPY conf/default /
+COPY tools/certificate/nginx-selfsigned.crt ${CERTS} 
+COPY tools/certificate/nginx-selfsigned.key ${CERTS}
+COPY tools/start.sh /
+CMD sh start.sh

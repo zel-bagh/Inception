@@ -1,5 +1,22 @@
 version: '3'
 services:
+  mariadb:
+    image: mariadb
+    build:
+      context: ./requirements/mariadb/
+      args:
+       - DB_USER=${DB_USER}
+       - DB_PASSWORD=${DB_PASSWORD}
+       - DB_NAME=${DB_NAME}
+       - MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS}
+    restart: unless-stopped
+    volumes:
+       - database:/var/lib/mysql
+    container_name: "mariadb"
+    ports:
+      - "3306"
+    networks:
+      - inception
   wordpress:
      build: ./requirements/wordpress
      image: wordpress
@@ -10,35 +27,35 @@ services:
      env_file:
       - .env
      volumes:
-         - ./requirements/wordpress/files:/var/www/html
+         - files:/var/www/html
      networks:
-      - network
+      - inception
   nginx:
-     build: ./requirements/nginx
+     build:
+      context: ./requirements/nginx
+      args:
+        - CERTS=${CERTS}
      image: nginx
      container_name: nginx
      restart: unless-stopped
      volumes:
-      - ./requirements/wordpress/files:/var/www/html
+      - files:/var/www/html
      ports:
        - "443:443"
      networks:
-      - network
-  mariadb:
-    image: mariadb
-    build:
-      context: ./requirements/mariadb/
-      args:
-       - DB_USER=$DB_USER
-       - DB_PASSWORD=$DB_PASSWORD
-       - DB_NAME=$DB_NAME
-    restart: unless-stopped
-    volumes:
-       - ./data:/koko
-    container_name: "mariadb"
-    ports:
-      - "3306"
-    networks:
-      - network
+      - inception
 networks:
-   network:
+   inception:
+volumes:
+  database:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/zel-bagh/data/database
+      o: bind
+  files:
+     driver: local
+     driver_opts:
+       type: none
+       device: /home/zel-bagh/data/files
+       o: bind
